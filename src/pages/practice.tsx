@@ -118,30 +118,22 @@ console.log("selectedTopic",selectedTopic);
         ? `Generate 2-3 concise, actionable and short sentences hints specifically about "${customTopic}" as a subtopic of "${selectedTopic}".`
         : `Generate 3-5 concise, actionable and short sentences hints for the topic "${selectedTopic}".`;
       
-      
-
       const result = await model.generateContent(prompt);
-      console.log("result",result);
       const response = result.response;
       if (!response) throw new Error("No response from API");
 
-
       const content = response.text();
-
       const data = content
-  .split('.')
-  .map(item => item.trim())
-  .filter(item => item.length > 0);
-
-
-      console.log("data hhj",content,data);
+        .split('.')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
 
       if (customTopic) {
         setLatestHints(data);
         setHints((prev) => [...prev, ...data]);
       } else {
         setHints(data);
-        setLatestHints([]);
+        setLatestHints(data);
       }
     } catch (err: unknown) {
       const error = err as Error;
@@ -489,12 +481,11 @@ console.log("selectedTopic",selectedTopic);
 
                 <div className="space-y-3 mt-4">
                   { hints && hints.length > 0 ? (
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     hints.map((hint: any, index: number) => (
                       <div 
                         key={index} 
                         className={`group flex items-start p-3 rounded-lg transition-all ${
-                          latestHints.some(h => h.hint === hint.hint)
+                          latestHints.includes(hint)
                             ? 'bg-yellow-500/20 text-yellow-300 font-medium' 
                             : 'hover:bg-gray-700/30'
                         }`}
