@@ -1,370 +1,3 @@
-// "use client";
-
-// import useSpeechToText from "react-hook-speech-to-text";
-// // import useTopicStore from "../store/topicSlice";
-// import { useState, useEffect, useRef } from "react";
-// import { ChevronDown, X, Trash2, Play, Pause, RotateCcw, Clock, Edit, Mic, MicOff, Download } from "lucide-react";
-  
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// import { useSearchParams } from 'next/navigation';
-
-// // Define types
-// interface Recording {
-//   blob: Blob;
-//   url: string;
-//   timestamp: number;
-//   duration: number;
-//   name: string;
-// }
-
-// interface Hint {
-//   hint: string;
-//   isNew: boolean;
-// }
-
-// interface GenerativeResponse {
-//   hints: Hint[];
-// }
-
-// // interface ResultType {
-// //   transcript: string;
-// //   timestamp: number;
-// // }
-
-// export default function AnyComponent() {
-//   const {
-//     error: speechError,
-//     interimResult,
-//     isRecording: isSpeechRecording,
-//     results,
-//     startSpeechToText,
-//     stopSpeechToText,
-//   } = useSpeechToText({
-//     continuous: true,
-//     useLegacyResults: false,
-//   });
-
-//   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
-//   const [isHintOpen, setIsHintOpen] = useState(false);
-//   const [hints, setHints] = useState<Hint[]>([]);
-//   const [loadingHints, setLoadingHints] = useState(false);
-//   const searchParams = useSearchParams();
-//   const selectedTopic = searchParams.get('topic');
-
-//   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-//   const genAI = new GoogleGenerativeAI(apiKey);
-  
-//   const model = genAI.getGenerativeModel({
-//     model: "gemini-1.5-flash",
-//   });
-
-//   const [userInput, setUserInput] = useState("");
-//   const [latestHints, setLatestHints] = useState<Hint[]>([]);
-
-//   const [time, setTime] = useState(90); // 1.5 minutes in seconds
-//   const [isRunning, setIsRunning] = useState(false);
-//   const [customTime, setCustomTime] = useState("1:30");
-//   const [showTimeInput, setShowTimeInput] = useState(false);
-//   const [customTopic, setCustomTopic] = useState("");
-//   const [showTopicInput, setShowTopicInput] = useState(false);
-  
-//   const timerRef = useRef<NodeJS.Timeout | null>(null);
-//   const [recordings, setRecordings] = useState<Recording[]>([]);
-//   const [isAudioRecording, setIsAudioRecording] = useState(false);
-//   const [isPaused, setIsPaused] = useState(false);
-//   const [recordingTime, setRecordingTime] = useState(0);
-//   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-//   const audioChunksRef = useRef<Blob[]>([]);
-//   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-//   useEffect(() => {
-//     if (isRunning && time > 0) {
-//       timerRef.current = setInterval(() => {
-//         setTime((prev) => prev - 1);
-//       }, 1000);
-//     } else if (time === 0) {
-//       setIsRunning(false);
-//     }
-
-//     return () => {
-//       if (timerRef.current) clearInterval(timerRef.current);
-//     };
-//   }, [isRunning, time]);
-
-//   useEffect(() => {
-//     if (isRunning && time > 0) {
-//       timerRef.current = setInterval(() => {
-//         setTime((prev) => prev - 1);
-//       }, 1000);
-//     } else if (time === 0) {
-//       setIsRunning(false);
-//     }
-
-//     return () => {
-//       if (timerRef.current) clearInterval(timerRef.current);
-//     };
-//   }, [isRunning, time]);
-
-//   const formatTime = (seconds: number): string => {
-//     const mins = Math.floor(seconds / 60);
-//     const secs = seconds % 60;
-//     return `${mins}:${secs.toString().padStart(2, '0')}`;
-//   };
-
-//   const handleTimeSubmit = (e: React.FormEvent): void => {
-//     e.preventDefault();
-//     const [mins, secs] = customTime.split(":").map(Number);
-//     const totalSeconds = (mins * 60) + (secs || 0);
-//     setTime(totalSeconds);
-//     setShowTimeInput(false);
-//   };
-
-//   const handleTopicSubmit = async (e: React.FormEvent): Promise<void> => {
-//     e.preventDefault();
-//     if (customTopic.trim()) {
-//       // window.history.pushState({}, '', `?topic=${encodeURIComponent(customTopic.trim())}`);
-//       setShowTopicInput(false);
-//       setCustomTopic("");
-//       await fetchHints();
-//     }
-//   };
-
-//   const fetchHints = async (customTopic?: string): Promise<void> => {
-//     setLoadingHints(true);
-//     try {
-//       const prompt = customTopic
-//         ? `Generate 2-3 concise, actionable and short sentences hints specifically about "${customTopic}" as a subtopic of "${selectedTopic}".`
-//         : `Generate 3-5 concise, actionable and short sentences hints for the topic "${selectedTopic}".`;
-
-//       const result = await model.generateContent(prompt);
-//       const response = result.response;
-//       if (!response) throw new Error("No response from API");
-
-//       const content = response.text();
-//       const data = JSON.parse(content) as GenerativeResponse;
-
-//       if (customTopic) {
-//         setLatestHints(data.hints);
-//         setHints(prev => [...prev, ...data.hints]);
-//       } else {
-//         setHints(data.hints);
-//         setLatestHints([]);
-//       }
-//     } catch (err: unknown) {
-//       const error = err as Error;
-//       console.error("Error fetching hints:", error.message);
-//     } finally {
-//       setLoadingHints(false);
-//     }
-//   };
-
-//   const handleCustomHints = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (userInput.trim()) {
-//       fetchHints(userInput.trim());
-//       setUserInput("");
-//     }else{
-//       if (selectedTopic) {
-//         fetchHints(selectedTopic);
-//       }
-//     }
-
-//   };
-
-//   const createAudioFile = () => {
-//     const transcript = results
-//           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//       .map((r:any) => (typeof r === 'string' ? r : r?.transcript))
-//       .join(" ");
-//     const blob = new Blob([transcript], { type: "audio/wav" });
-//     return blob;
-//   };
-
-//   const uploadAudio = async () => {
-//     const audioFile = createAudioFile();
-
-//     if (!audioFile) {
-//       alert("No audio available to upload.");
-//       return;
-//     }
-
-//     const formData = new FormData();
-//     formData.append("audio", audioFile);
-
-//     try {
-//       setUploadStatus("Uploading...");
-//       const response = await fetch("/api/audio", {
-//         method: "POST",
-//         body: formData,
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to upload audio.");
-//       }
-
-//       const data = await response.json();
-//       setUploadStatus(`Upload successful! Audio URL: ${data.url}`);
-//     } catch (err: unknown) {
-//       const error = err as Error;
-//       console.error("Error uploading audio:", error.message);
-//       setUploadStatus("Failed to upload audio.");
-//     }
-//   };
-
-//   // Add this function to handle click events inside the dropdown
-//   const handleDetailsClick = (e: React.MouseEvent) => {
-//     e.stopPropagation(); // Prevent click from bubbling up to details element
-//   };
-
-//   const deleteHint = (indexToDelete: number) => {
-//     setHints((prevHints: Hint[]) => 
-//       prevHints.filter((_, index: number) => index !== indexToDelete)
-//     );
-//   };
-
-//   const clearAllHints = () => {
-//     setHints([]);
-//     setLatestHints([]);
-//   };
-
-//   // Recording timer function
-//   const startRecordingTimer = () => {
-//     timerIntervalRef.current = setInterval(() => {
-//       setRecordingTime(prev => prev + 1);
-//     }, 1000);
-//   };
-
-//   const stopRecordingTimer = () => {
-//     if (timerIntervalRef.current) {
-//       clearInterval(timerIntervalRef.current);
-//     }
-//   };
-
-//   const formatRecordingTime = (seconds: number) => {
-//     const mins = Math.floor(seconds / 60);
-//     const secs = seconds % 60;
-//     return `${mins}:${secs.toString().padStart(2, '0')}`;
-//   };
-
-//   const startRecording = async () => {
-//     try {
-//       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-//       const mediaRecorder = new MediaRecorder(stream);
-//       mediaRecorderRef.current = mediaRecorder;
-//       audioChunksRef.current = [];
-
-//       mediaRecorder.ondataavailable = (event) => {
-//         if (event.data.size > 0) {
-//           audioChunksRef.current.push(event.data);
-//         }
-//       };
-
-//       mediaRecorder.onstop = () => {
-//         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-//         const audioUrl = URL.createObjectURL(audioBlob);
-//         const timestamp = Date.now();
-//         setRecordings(prev => [...prev, {
-//           blob: audioBlob,
-//           url: audioUrl,
-//           timestamp,
-//           duration: recordingTime,
-//           name: `Recording_${timestamp}`
-//         }]);
-//         setRecordingTime(0);
-//       };
-
-//       mediaRecorder.start(10);
-//       setIsAudioRecording(true);
-//       setIsPaused(false);
-//       startRecordingTimer();
-//     } catch (error) {
-//       console.error('Error accessing microphone:', error);
-//       alert('Error accessing microphone. Please ensure you have granted microphone permissions.');
-//     }
-//   };
-
-//   const pauseRecording = () => {
-//     if (mediaRecorderRef.current && isAudioRecording) {
-//       mediaRecorderRef.current.pause();
-//       setIsPaused(true);
-//       stopRecordingTimer();
-//     }
-//   };
-
-//   const resumeRecording = () => {
-//     if (mediaRecorderRef.current && isAudioRecording) {
-//       mediaRecorderRef.current.resume();
-//       setIsPaused(false);
-//       startRecordingTimer();
-//     }
-//   };
-
-//   const stopRecording = () => {
-//     if (mediaRecorderRef.current && isAudioRecording) {
-//       mediaRecorderRef.current.stop();
-//       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-//       setIsAudioRecording(false);
-//       setIsPaused(false);
-//       stopRecordingTimer();
-//     }
-//   };
-
-//   const restartRecording = () => {
-//     stopRecording();
-//     setTimeout(() => {
-//       startRecording();
-//     }, 100);
-//   };
-
-//   const downloadRecording = (recording: Recording) => {
-//     const url = URL.createObjectURL(recording.blob);
-//     const a = document.createElement('a');
-//     a.href = url;
-//     a.download = `${recording.name}.wav`;
-//     document.body.appendChild(a);
-//     a.click();
-//     document.body.removeChild(a);
-//     URL.revokeObjectURL(url);
-//   };
-
-//   const deleteRecording = (timestamp: number) => {
-//     setRecordings(prev => {
-//       const newRecordings = prev.filter(rec => rec.timestamp !== timestamp);
-//       // Clean up URLs
-//       prev.forEach(rec => {
-//         if (rec.timestamp === timestamp) {
-//           URL.revokeObjectURL(rec.url);
-//         }
-//       });
-//       return newRecordings;
-//     });
-//   };
-
-//   // Clean up URLs when component unmounts
-//   useEffect(() => {
-//     return () => {
-//       recordings.forEach(rec => URL.revokeObjectURL(rec.url));
-//     };
-//   }, [recordings]);
-
-//   if (speechError) return <p>Web Speech API is not available in this browser 🤷‍</p>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useRef } from "react";
 import useSpeechToText from "react-hook-speech-to-text";
 import { ChevronDown, X, Trash2, Play, Pause, RotateCcw, Clock, Edit, Mic, MicOff, Download } from "lucide-react";
@@ -385,14 +18,18 @@ interface Hint {
   isNew: boolean;
 }
 
-// interface GenerativeResponse {
-//   hints: Hint[];
-// }
-
 export default function AnyComponent() {
   const location = useLocation();
+  const [selectedTopic,setSelectedTopic] = useState("");
   const searchParams = new URLSearchParams(location.search);
-  const selectedTopic = searchParams.get("topic");
+  // const selectedTopic = searchParams.get("topic");
+  // let selectedTopic = "";
+  useEffect(()=>{
+    const searchParams = new URLSearchParams(location.search);
+    const selectedTopic = searchParams.get("topic") || "";
+    setSelectedTopic(selectedTopic);
+  },[location,searchParams])
+console.log("searchParams",searchParams.get("topic"));
 
   const {
     error: speechError,
@@ -449,7 +86,7 @@ export default function AnyComponent() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isRunning, time]);
-
+console.log("selectedTopic",selectedTopic);
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -488,28 +125,14 @@ export default function AnyComponent() {
       const response = result.response;
       if (!response) throw new Error("No response from API");
 
-      // const content = response.text();
-      // const content= response.candidates[0].content.parts[0].text || "";
-      
-      // const data = JSON.parse(content);
 
       const content = response.text();
-      // const data = content.trim().startsWith(',')
+
       const data = content
   .split('.')
   .map(item => item.trim())
   .filter(item => item.length > 0);
-      // JSON.parse(content) as GenerativeResponse;
 
-         
-
-      // let data;
-      // if (content.trim().startsWith('{')) {
-      //   data = JSON.parse(content);
-      // } else {
-      //   // Handle non-JSON response
-      //   data = { message: content };
-      // }
 
       console.log("data hhj",content,data);
 
@@ -718,7 +341,7 @@ export default function AnyComponent() {
     <div className="w-full flex flex-col items-center">
       <main className="w-full max-w-2xl flex flex-col gap-8">
         <div className="w-full">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex md:flex-row flex-col gap-3 md:gap-0 justify-between items-center mb-6">
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-gray-400">{selectedTopic}</h1>
               <button
@@ -829,19 +452,19 @@ export default function AnyComponent() {
                 className="p-6 space-y-4" 
                 onClick={handleDetailsClick}
               >
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap justify-between items-center">
                   <form onSubmit={handleCustomHints} className="flex gap-2 flex-1">
                     <input
                       type="text"
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
                       placeholder="Enter subtopic for more hints"
-                      className="flex-1 p-3 rounded-lg text-gray-900 bg-white/90 backdrop-blur-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="flex-1 sm:p-3 p-1 h-[3rem] sm:h-auto rounded-lg text-gray-900 bg-white/90 backdrop-blur-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                     <button
                       type="submit"
                       disabled={loadingHints}
-                      className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium shadow-sm"
+                      className="bg-blue-500 text-white sm:px-6 sm:py-3 text-sm sm:h-auto rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium shadow-sm"
                     >
                       {loadingHints ? (
                         <span className="flex items-center gap-2">
@@ -898,7 +521,7 @@ export default function AnyComponent() {
             </details>
 
             <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap gap-2 items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-lg font-medium text-white">Voice Recordings</h2>
                   {isAudioRecording && (
@@ -938,7 +561,6 @@ export default function AnyComponent() {
                   </button>
                 </div>
               </div>
-
               <div className="space-y-3">
                 {recordings.length === 0 ? (
                   <p className="text-gray-400 text-center py-4">
@@ -948,31 +570,37 @@ export default function AnyComponent() {
                   recordings.map((recording, index) => (
                     <div 
                       key={recording.timestamp}
-                      className="flex items-center justify-between bg-gray-700/30 p-3 rounded-lg group"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700/30 p-3 rounded-lg group gap-3"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="text-gray-400 min-w-[100px]">
-                          Recording {recordings.length - index}
-                        </span>
-                        <span className="text-gray-400 text-sm">
-                          ({formatRecordingTime(recording.duration)})
-                        </span>
-                        <audio controls className="h-8 flex-1">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 whitespace-nowrap">
+                            Recording {recordings.length - index}
+                          </span>
+                          <span className="text-gray-400 text-sm">
+                            ({formatRecordingTime(recording.duration)})
+                          </span>
+                        </div>
+                        <audio 
+                          controls 
+                          className="w-full sm:w-[200px] h-[30px]"
+                        >
                           <source src={recording.url} type="audio/wav" />
                           Your browser does not support the audio element.
                         </audio>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                         <button
                           onClick={() => downloadRecording(recording)}
-                          className="opacity-0 group-hover:opacity-100 p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all duration-200"
+                          className="sm:opacity-0 group-hover:opacity-100 p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all duration-200"
                           title="Download recording"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteRecording(recording.timestamp)}
-                          className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-all duration-200"
+                          className="sm:opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-all duration-200"
                           title="Delete recording"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -984,9 +612,9 @@ export default function AnyComponent() {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
-                className="bg-white text-gray-900 p-3 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto bg-white text-gray-900 p-3 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                 onClick={isSpeechRecording ? stopSpeechToText : startSpeechToText}
               >
                 {isSpeechRecording ? "Stop Translation" : "Start Translation"}

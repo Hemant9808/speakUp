@@ -161,7 +161,7 @@ const FetchTopics = () => {
 
   const getPrompt = (input:any) => {
     if (!input.trim()) {
-      return `Generate three creative, engaging, and unique topic names that can help someone practice English communication skills. The topics should be diverse, conversational, and suitable for discussions across casual, professional, and thought-provoking contexts. Respond only in the following JSON format:
+      return `Generate three creative, engaging, and that can help someone practice English communication skills.Topics should be comfortable and easy to discuss for beginners in GD, and should be related to general knowledge and suitable for group discussions interviews rounds for graducation students. Respond only in the following JSON format:
 {
   "topics": [
     "Topic 1",
@@ -170,8 +170,9 @@ const FetchTopics = () => {
   ]
 } `;
     }
+    return `Generate three creative, engaging, and related to "${input}", that can help someone practice English communication skills.Topics should be comfortable and easy to discuss for beginners in GD, and should be related to general knowledge and suitable for group discussions interviews rounds for graducation students. Respond only in the following JSON format:
 
-    return `Generate three creative, engaging, and unique topic names related to "${input}" that can help someone practice English communication skills. The topics should be diverse, conversational, and suitable for discussions. Respond only in the following JSON format:
+    
 {
   "topics": [
     "Topic 1",
@@ -219,17 +220,17 @@ const FetchTopics = () => {
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center  sm:max-h-screen h-[80vh] p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
         <div className="p-5">
-          <h1 className="text-2xl font-bold mb-6">English Practice Topics</h1>
+          <h1 className="text-2xl font-bold mb-6">GD Practice Topics</h1>
           <div className="flex flex-col gap-4">
             <input
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Enter a topic area (optional)"
-              className="p-2 rounded border border-gray-300 text-black"
+              className="p-2 rounded border border-gray-300 "
             />
             <button 
               className="bg-white text-black p-3 rounded hover:bg-gray-100 transition-colors" 
